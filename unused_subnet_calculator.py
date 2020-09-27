@@ -17,6 +17,7 @@ parser.add_argument(
     "--network-cidr",
     help="CIDR representing entire virtual network.",
     dest="network",
+    type=str,
     required=True
 )
 parser.add_argument(
@@ -24,7 +25,16 @@ parser.add_argument(
     "--allocated-subnet-cidrs",
     help="CIDRs that have already been allocated for subnets.",
     dest="allocated",
+    type=str,
     nargs="*"
+)
+parser.add_argument(
+    "-m",
+    "--mask",
+    help="Output filtering: will return all possible unused subnets with a specific mask (0-32).",
+    dest="mask",
+    type=int,
+    required=False
 )
 args = parser.parse_args()
 
@@ -92,10 +102,30 @@ try:
     unused_cidrs = list(itertools.chain.from_iterable(
         [CIDR.from_ip_range(ipr) for ipr in unused_ranges]
     ))
-    print("Done.\n")
 
+    print("Done.\n")
     # print results
     [print(u) for u in unused_cidrs]
+
+    # if a specific mask is requested, breaks down the CIDRs from above to reach that
+    if args.mask is not None:
+        print(f"Filtering/splitting subnets to match mask filter ({args.mask})...", end=" ")
+
+        # validate mask
+        CIDR.validate_mask(args.mask)
+
+        # filter out cidrs that have masks > args.mask, since those can't be broken down
+        # for cidrs that have masks < args.mask, split them further
+        # for cidrs that have masks = args.mask, simply append them
+        filtered_cidrs = list(itertools.chain.from_iterable(
+            [cidr.divide(args.mask) for cidr in unused_cidrs]
+        ))
+
+        print("Done.\n")
+        # print results
+        [print(f) for f in filtered_cidrs]
+
+
 except Exception as e:
     print(f"ERROR: {str(e)}")
     sys.exit(1)

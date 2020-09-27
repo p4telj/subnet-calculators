@@ -6,6 +6,7 @@ Contains class definition.
 
 import math
 import copy
+import itertools
 
 from networking import IP, IPRange
 
@@ -36,8 +37,7 @@ class CIDR:
                 # mask must be parse-able as an integer
                 self.mask = int(split[1])
                 # mask must fit into range
-                if self.mask < CIDR.MIN_MASK or self.mask > CIDR.MAX_MASK:
-                    raise ValueError(f"Mask {self.mask} out of range.")
+                CIDR.validate_mask(self.mask)
             except:
                 # propagate error to client
                 raise ValueError(f"{cidr_string}: format is IP/mask, EX. 10.0.0.0/5, where mask <= 32 and >= 0")
@@ -49,8 +49,7 @@ class CIDR:
         elif isinstance(ip, IP) and type(mask) == int:
             self.mask = mask
             # mask must fit into range
-            if self.mask < CIDR.MIN_MASK or self.mask > CIDR.MAX_MASK:
-                raise ValueError(f"Mask {self.mask} out of range.")
+            CIDR.validate_mask(self.mask)
             # references IP object
             self.base_ip = copy.deepcopy(ip)
             # string representation
@@ -78,6 +77,44 @@ class CIDR:
     def does_overlap(self, other):
         """Determines if current CIDR overlaps with other CIDR."""
         return self.cidr_range.does_overlap(other.cidr_range)
+
+    def divide(self, target_mask):
+        """
+        Divide CIDR into multiple CIDRs given a target mask > the current mask.
+
+        General behavior:
+
+        If the target mask is < the current mask, return an empty list
+        If the target mask is = the current mask, return the CIDR as a single object in a list.
+        """
+        current_mask = self.mask
+
+        if current_mask > target_mask:
+            return []
+
+        temp = [[CIDR(ip=self.base_ip, mask=self.mask)], []] # will juggle CIDRS between the 2 nested lists until finally determined
+        ind = 0
+        while current_mask < target_mask:
+            other = (ind + 1) % 2 # will cycle between 0 and 1 for the temp lists
+            for cidr in temp[ind]:
+                # split into 2 and increase mask by 1
+                # first is the base_ip with an increased mask
+                temp[other].append(CIDR(ip=cidr.base_ip, mask=cidr.mask+1))
+                # second is the second IP of the above CIDR + 1, with the same mask
+                temp[other].append(CIDR(ip=temp[other][-1].cidr_range.range[1].add_hosts(1), mask=cidr.mask+1))
+            temp[ind] = [] # reset list once processed
+            ind = other
+            current_mask += 1
+
+        # merges list of lists (temp) into a single list
+        return list(itertools.chain.from_iterable(temp))
+
+    @classmethod
+    def validate_mask(cls, mask):
+        """Validates mask."""
+        if mask < cls.MIN_MASK or mask > cls.MAX_MASK:
+            raise ValueError(f"Mask {mask} out of range.")
+        return
 
     @classmethod
     def get_hosts(cls, mask):
