@@ -123,7 +123,7 @@ try:
 
     # if a specific mask is requested, breaks down the CIDRs from above to reach that
     if args.mask is not None:
-        print(f"Filtering/splitting subnets to match mask filter ({args.mask})...", end=" ")
+        print(f"\nFiltering/splitting subnets to match mask filter ({args.mask})...", end=" ")
 
         # validate mask
         CIDR.validate_mask(args.mask)
