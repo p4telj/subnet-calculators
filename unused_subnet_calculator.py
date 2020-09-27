@@ -84,11 +84,11 @@ try:
     # create a list of all IPRanges in network and sort it
     subnet_ranges = sorted([IPRange(cidr=subnet_cidr) for subnet_cidr in subnet_cidrs])
     # create a list of all IPs in network
-    ips = [network_range.range[0]] # start of network
+    ips = [network_range[0]] # start of network
     for ipr in subnet_ranges:
-        ips.append(ipr.range[0])
-        ips.append(ipr.range[1])
-    ips.append(network_range.range[1]) # end of network
+        ips.append(ipr[0])
+        ips.append(ipr[1])
+    ips.append(network_range[1]) # end of network
 
     # from the list of the IPs in the network, create IPRanges that represent
     # the unused ranges of IP addresses.

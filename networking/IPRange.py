@@ -88,3 +88,7 @@ class IPRange:
     def __le__(self, other):
         """<= comparator. Assuming the IPRanges don't overlap."""
         return self.range[1] <= other.range[0]
+
+    def __getitem__(self, index):
+        """[] override."""
+        return self.range[index]

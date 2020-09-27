@@ -101,7 +101,7 @@ class CIDR:
                 # first is the base_ip with an increased mask
                 temp[other].append(CIDR(ip=cidr.base_ip, mask=cidr.mask+1))
                 # second is the second IP of the above CIDR + 1, with the same mask
-                temp[other].append(CIDR(ip=temp[other][-1].cidr_range.range[1].add_hosts(1), mask=cidr.mask+1))
+                temp[other].append(CIDR(ip=temp[other][-1].cidr_range[1].add_hosts(1), mask=cidr.mask+1))
             temp[ind] = [] # reset list once processed
             ind = other
             current_mask += 1
