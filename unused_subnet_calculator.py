@@ -20,28 +20,29 @@ parser.add_argument(
     type=str,
     required=True
 )
-parser.add_argument(
+group = parser.add_mutually_exclusive_group()
+group.add_argument(
     "-a",
-    "--allocated-subnet-cidrs",
-    help="List of CIDRs that have already been allocated for subnets.",
+    "--allocated-subnet-list",
+    help="List of CIDRs that have already been allocated for subnets. Conflicts with (-f|--allocated-subnet-file)",
     dest="allocated",
     type=str,
     nargs="*"
 )
+group.add_argument(
+    "-f",
+    "--allocated-subnet-file",
+    help="Relative filepath containing newline-separated CIDRs that have already been allocated for subnets. Conflicts with (-a|--allocated-subnet-list)",
+    dest="allocated_file",
+    type=str
+)
 parser.add_argument(
     "-m",
-    "--mask",
+    "--mask-filter",
     help="Output filtering: will return all possible unused subnets with a specific mask (0-32).",
     dest="mask",
     type=int,
     required=False
-)
-parser.add_argument(
-    "-f",
-    "--allocated-subnet-file",
-    help="Relative filepath containing newline-separated CIDRs that have already been allocated for subnets.",
-    dest="allocated_file",
-    type=str
 )
 args = parser.parse_args()
 
@@ -62,8 +63,6 @@ try:
         # pull file values into a list
         with open(args.allocated_file, "r") as allocated_file:
             allocated = allocated_file.read().splitlines()
-    elif allocated is not None and args.allocated_file is not None:
-        raise RuntimeError("Allocated subnets must be provided either from a file (-f) OR a list (-l), not both.")
 
     # create CIDR objects per allocated subnets in virtual network
     subnet_cidrs = []
@@ -139,7 +138,6 @@ try:
         print("Done.\n")
         # print results
         [print(f) for f in filtered_cidrs]
-
 
 except Exception as e:
     print(f"ERROR: {str(e)}")
