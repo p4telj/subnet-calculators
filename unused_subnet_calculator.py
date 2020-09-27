@@ -23,7 +23,7 @@ parser.add_argument(
 parser.add_argument(
     "-a",
     "--allocated-subnet-cidrs",
-    help="CIDRs that have already been allocated for subnets.",
+    help="List of CIDRs that have already been allocated for subnets.",
     dest="allocated",
     type=str,
     nargs="*"
@@ -36,6 +36,13 @@ parser.add_argument(
     type=int,
     required=False
 )
+parser.add_argument(
+    "-f",
+    "--allocated-subnet-file",
+    help="Relative filepath containing newline-separated CIDRs that have already been allocated for subnets.",
+    dest="allocated_file",
+    type=str
+)
 args = parser.parse_args()
 
 try:
@@ -47,12 +54,20 @@ try:
     
     # validate allocated subnets
     print("Validating allocated subnets...", end=" ")
-    if args.allocated is None:
-        raise RuntimeError("No allocated subnets found.")
+    allocated = args.allocated
+    if allocated is None:
+        if args.allocated_file is None:
+            raise RuntimeError("No allocated subnets found. Must provide either a file (-f) containing " + 
+                               "newline separated subnets, or a list (-a)" )
+        # pull file values into a list
+        with open(args.allocated_file, "r") as allocated_file:
+            allocated = allocated_file.read().splitlines()
+    elif allocated is not None and args.allocated_file is not None:
+        raise RuntimeError("Allocated subnets must be provided either from a file (-f) OR a list (-l), not both.")
 
     # create CIDR objects per allocated subnets in virtual network
     subnet_cidrs = []
-    for cidr_string in args.allocated:
+    for cidr_string in allocated:
         # verify that each CIDR exists within the larger network
         subnet_cidrs.append(CIDR(cidr_string=cidr_string))
         if not subnet_cidrs[-1].is_within(network_cidr):
