@@ -1,4 +1,4 @@
-# subnet-calculator
+# subnet-calculators
 This side-project aims to provide access to easy subnet calculations.
 
 It does so by implementing the following classes:
