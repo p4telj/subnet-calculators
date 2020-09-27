@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 unused_subnet_calculator.py
 
