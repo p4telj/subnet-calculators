@@ -62,7 +62,7 @@ try:
                                "newline separated subnets, or a list (-a)" )
         # pull file values into a list
         with open(args.allocated_file, "r") as allocated_file:
-            allocated = allocated_file.read().splitlines()
+            allocated = [s for s in allocated_file.read().splitlines() if s.strip()]
 
     # create CIDR objects per allocated subnets in virtual network
     subnet_cidrs = []
